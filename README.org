@@ -1,0 +1,3 @@
+* reticulum-packet-rs
+** Overview
+An *unofficial* and very proof-of-concept library to parse/decode [[https://reticulum.network/][Reticulum]] packets in Rust.
