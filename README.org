@@ -1,3 +1,14 @@
 * reticulum-packet-rs
 ** Overview
-An *unofficial* and very proof-of-concept library to parse/decode [[https://reticulum.network/][Reticulum]] packets in Rust.
+An *unofficial* and very proof-of-concept library to parse/decode [[https://reticulum.network/][Reticulum]]
+packets in Rust. Treat this is a quick and dirty hack.
+
+** Here be dragons
+For now it can only decode packets from the [[https://markqvist.github.io/Reticulum/manual/interfaces.html#pipe-interface][Pipe Interface]] and assumes the
+packet is already stripped from any HDCL start/end bytes *but* is not escaped!
+A lot of things are hardcoded for it to work with the Pipe interface, but it
+should be possible to modularize this in the future.
+
+It contains ugly hacks for which I'm sure there are better idiomatic Rust
+approaches I'm not familiar with. For now it has zero dependencies, but things
+like [[https://github.com/bitflags/bitflags][bitflags]] might be added.
