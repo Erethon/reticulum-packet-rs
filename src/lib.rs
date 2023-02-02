@@ -72,11 +72,16 @@ impl Packet {
     }
 }
 
-//pub fn parse_packet(raw_packet: &[u8]) -> Result<Packet, String> {
 pub fn parse_packet(raw_packet: Vec<u8>) -> Result<Packet, String> {
     let mut packet = raw_packet;
-    let mut t = vec![];
 
+    //TODO make this modular so it works for KISS-escaped packets as well
+    if packet[0] != 0x7e || packet.last().unwrap_or(&0x00) != &0x7e {
+        return Err(String::from("Not a valid packet"));
+    }
+    packet.retain(|&x| x != 0x7e);
+
+    let mut t = vec![];
     for (i, v) in packet.iter().enumerate() {
         if v == &0x7d {
             t.push(i);
