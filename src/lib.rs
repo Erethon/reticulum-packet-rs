@@ -90,7 +90,7 @@ impl Announcement {
 }
 
 impl Packet {
-    pub fn debug_packet(&self, verbose: bool) -> String {
+    pub fn debug_packet(&self, verbose: usize) -> String {
         let mut packet_info = String::from("");
         if (self.header & 0b10000000) >> 7 != 0 {
             packet_info.push_str(
@@ -98,11 +98,16 @@ impl Packet {
             );
         }
         if self.is_hop() {
-            packet_info.push_str(format!("Hop Address: {}, ", self.string_hop_address()).as_str());
+            packet_info
+                .push_str(format!("Hop Address: {}, ", bytes_to_hex(&self.hop_address)).as_str());
         }
-        packet_info.push_str(format!("Address: {}, Hops: {:?}, Header Type: {:?}, Context: {:?}, Destination Type: {:?}, Propagation Type: {:?}, Packet Type: {:?}", self.string_address(), self.hops, ((self.header & 0b01000000) >> 6) + 1, self.context_type, self.destination_type, self.propagation_type, self.packet_type).as_str());
-        if verbose {
-            packet_info.push_str(format!(" Data: {:02X?}", self.data).as_str());
+        packet_info.push_str(format!("Address: {}, Hops: {:?}, Header Type: {:?}, Context: {:?}, Destination Type: {:?}, Propagation Type: {:?}, Packet Type: {:?}", bytes_to_hex(&self.address), self.hops, ((self.header & 0b01000000) >> 6) + 1, self.context_type, self.destination_type, self.propagation_type, self.packet_type).as_str());
+        if verbose != 0 {
+            let mut limit = verbose;
+            if limit > self.data.len() {
+                limit = self.data.len();
+            }
+            packet_info.push_str(format!(" Data: {:02X?}", &self.data[..limit]).as_str());
         }
         packet_info
     }
@@ -138,22 +143,6 @@ impl Packet {
             return true;
         }
         false
-    }
-
-    pub fn string_address(&self) -> String {
-        let mut s = String::new();
-        for i in self.address {
-            write!(s, "{i:02X}").unwrap();
-        }
-        s
-    }
-
-    pub fn string_hop_address(&self) -> String {
-        let mut s = String::new();
-        for i in self.hop_address {
-            write!(s, "{i:02X}").unwrap();
-        }
-        s
     }
 }
 
@@ -279,7 +268,7 @@ pub fn parse_packet(raw_packet: Vec<u8>, packet_info: (&String, &usize)) -> Resu
         _ => Context::Lrproof,
     };
 
-    let mut address: [u8; 16] = [0; 16];
+    let address: [u8; 16];
     let mut hop_address: [u8; 16] = [0; 16];
     if size_addr == 32 {
         hop_address = packet[2 + ifac_size..18 + ifac_size].try_into().unwrap();
@@ -307,4 +296,12 @@ pub fn parse_packet(raw_packet: Vec<u8>, packet_info: (&String, &usize)) -> Resu
         packet_type,
         context_type,
     })
+}
+
+fn bytes_to_hex(input: &[u8]) -> String {
+    let mut s = String::new();
+    for i in input {
+        write!(s, "{i:02X}").unwrap();
+    }
+    s
 }
