@@ -49,8 +49,8 @@ enum Context {
     Lrproof,
 }
 
-///A struct that represents a packet stripped from any start/end bytes, as well as any HDLC/KISS
-///framing.
+/// A struct that represents a packet. It's a deserialized packet, stripped from
+/// any start/end bytes, as well as any HDLC/KISS framing.
 pub struct Packet {
     header: u8,
     hops: u8,
@@ -188,18 +188,30 @@ fn decode_packet(mut packet: Vec<u8>) -> Result<Vec<u8>, String> {
     Ok(packet)
 }
 
-///Try to parse a `Vec<u8>` as a Reticulum packet.
+/// Try to parse a `Vec<u8>` as a Reticulum packet.
 ///
-///The Python reference implementation of Reticulum prepares bytes to be send over the wire in two
-///different steps. First step is to create the packet, this is the same for all interfaces. The
-///second step is encoding the packet according to Interface specific requirements.
+/// The Python reference implementation of Reticulum prepares bytes to be send
+/// over the wire in two different steps. First step is to create the packet,
+/// this is the same for all interfaces. The second step is encoding the packet
+/// according to Interface specific requirements.
 ///
-///This function accepts a `Vec<u8>` that can either be the stripped packet or the wrapped packet.
-pub fn parse_packet(raw_packet: Vec<u8>, packet_info: (&String, &usize)) -> Result<Packet, String> {
+/// This function accepts a `Vec<u8>` and a tuple. The `Vec<u8>` is the byte
+/// representation of the packet and it can either be HDLC framed and escaped or
+/// just raw bytes.
+///
+/// The tuple takes three arguments: A bool to signal if the packet is framed or
+/// not, a string for the IFAC password and a usize for the number of bytes of
+/// IFAC. The IFAC settings are currently ignored.
+pub fn parse_packet(
+    raw_packet: Vec<u8>,
+    packet_options: (bool, &String, &usize),
+) -> Result<Packet, String> {
     let mut packet = raw_packet;
-    let (ifac, ifac_size) = packet_info;
+    let (decode, ifac, ifac_size) = packet_options;
 
-    packet = decode_packet(packet)?;
+    if decode {
+        packet = decode_packet(packet)?;
+    }
 
     let size_addr = if ((packet[0] & 0b01000000) >> 6) == 0 {
         16
