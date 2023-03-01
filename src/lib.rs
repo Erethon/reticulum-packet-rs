@@ -148,10 +148,6 @@ impl Packet {
 
 //TODO: This needs to be modular so it supports other encodings (KISS) as well
 fn decode_packet(mut packet: Vec<u8>) -> Result<Vec<u8>, String> {
-    if packet.len() < 5 {
-        return Err(String::from("Invalid packet, packet length is too small"));
-    }
-
     if packet[0] != 0x7e
         || packet.last() != Some(&0x7e)
         || packet.iter().filter(|&b| *b == 0x7e).count() != 2
@@ -208,6 +204,10 @@ pub fn parse_packet(
 ) -> Result<Packet, String> {
     let mut packet = raw_packet;
     let (decode, ifac, ifac_size) = packet_options;
+
+    if packet.len() < 5 {
+        return Err(String::from("Invalid packet, packet length is too small"));
+    }
 
     if decode {
         packet = decode_packet(packet)?;
