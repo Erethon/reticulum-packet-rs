@@ -25,7 +25,7 @@ enum PacketType {
     Proof,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 enum Context {
     None,
     Resource,
@@ -47,6 +47,7 @@ enum Context {
     Linkproof,
     Lrrtt,
     Lrproof,
+    NotImplemented,
 }
 
 /// A struct that represents a packet. It's a deserialized packet, stripped from
@@ -277,8 +278,16 @@ pub fn parse_packet(
         0xFC => Context::Linkclose,
         0xFD => Context::Linkproof,
         0xFE => Context::Lrrtt,
-        _ => Context::Lrproof,
+        0xFF => Context::Lrproof,
+        _ => Context::NotImplemented,
     };
+
+    if context_type == Context::NotImplemented {
+        return Err(format!(
+            "Invalid context type {:?}",
+            packet[2 + ifac_size + size_addr]
+        ));
+    }
 
     let address: [u8; 16];
     let mut hop_address: [u8; 16] = [0; 16];
